@@ -10,39 +10,57 @@ module.exports.run = async (client, message, command, con) => {
     con.query('SELECT racename, time, id FROM races ', async function (err, result, fields) {
         if (err) throw err;
 
+        //it looks bad and i feel bad
+        var count = 0;
+        let finishedSend;
+        for (let i = 0; i < result.length; i++) {
 
-        await result.forEach(async function (result) {
-            console.log(`${result.racename} + ${result.time} + ${result.id}`)
+            finishedSend = false;
+
             var temp, tempX, tempT;
 
-            if (result.id == 0) {
+            if (result[i].id == 0) {
                 temp = 'undefined';
             }
             else {
-                temp = await client.users.fetch(result.id);
+                temp = await client.users.fetch(result[i].id);
             }
 
-            if (result.time == 9999999) {
-                tempX = "No Time Set Yet";
-            }
-            else {
+            console.log(`${result[i].racename} + ${result[i].time} + ${result[i].id}`)
 
-                if (result.time == 89) {
-                    tempT = "Invalid Time"
-                }
-                else {
-                    tempT = "0" + JSON.stringify(result.time);
+            if (result[i].time != 9999999) {
+                if (result[i].time != 89) {
+                    tempT = "0" + JSON.stringify(result[i].time);
                     tempT = tempT.substr(0, 2) + ':' + tempT.substr(2, 2) + '.' + tempT.substr(4);
                 }
-
-                tempX = `${tempT} set by: ${temp}`;
+                else {
+                    tempT = "Invalid Time"
+                }
+                tempX = `${tempT} set by: ${temp}`
+            }
+            else {
+                tempX = "No Time Set Yet";
             }
 
-            embed.addFields({ name: `${result.racename}`, value: `${tempX}` });
-        });
+            count++;
 
-        message.channel.send(embed);
+            if (count < 10) {
+                embed.addFields({ name: `${result[i].racename}`, value: `${tempX}` });
+            } else {
 
+                message.channel.send(embed)
+
+                embed.fields = [];
+                count = 0;
+
+                finishedSend = true;
+            }
+
+        }
+        if(!finishedSend){
+            message.channel.send(embed);
+        }
+        
     });
 }
 module.exports.help = {

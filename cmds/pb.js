@@ -7,26 +7,48 @@ module.exports.run = async (client, message, command, con) => {
         .setTitle(`Personal Bests`)
         .setThumbnail(`${user.displayAvatarURL()}`)
         .setAuthor(`${user.tag}`, `${user.displayAvatarURL()}`);
-    
+
 
     console.log(user);
     con.query(`SELECT racename, times FROM users WHERE id = '${user.id}'`, async function (err, result, fields) {
         if (err) throw err;
         let tempT;
+
+        var count = 0;
+        let finishedSend;
+
         var tempN = Object.entries(result).length === 0;
+
         if (!tempN) {
-            result.forEach(async function (result) {
-                console.log(` ${result.racename} + ${result.times} `);
-                if (result.time == 89) {
+
+            for (let i = 0; i < result.length; i++) {
+
+                finishedSend = false;
+                count++
+                console.log(` ${result[i].racename} + ${result[i].times} `);
+
+                if (result[i].time == 89) {
                     tempT = "Invalid Time"
                 }
                 else {
-                    tempT = "0" + JSON.stringify(result.times);
+                    tempT = "0" + JSON.stringify(result[i].times);
                     tempT = tempT.substr(0, 2) + ':' + tempT.substr(2, 2) + '.' + tempT.substr(4);
                 }
-                embed.addFields({ name: `${result.racename}`, value: `${tempT}` });
-            });
-            await message.channel.send(embed);
+                if (count < 10) {
+                    embed.addFields({ name: `${result[i].racename}`, value: `${tempT}` });
+                }
+                else {
+                    message.channel.send(embed)
+
+                    embed.fields = [];
+                    count = 0;
+
+                    finishedSend = true;
+                }
+            }
+            if (!finishedSend) {
+                message.channel.send(embed);
+            }
         }
         else {
             embed.setTitle(`Sorry either "${user.tag}" doesn't exist or "${user.tag}" has no times yet`);
